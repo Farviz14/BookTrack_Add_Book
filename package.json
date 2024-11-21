@@ -5,19 +5,24 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "backend-test": "nyc --nycrc-path .nycrc-backend mocha"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.3",
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "fs": "^0.0.1-security",
+    "mocha": "^10.8.2",
     "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "nyc": "^17.1.0"
   }
 }
