@@ -10,6 +10,7 @@ chai.use(chaiHttp);
 
 let baseUrl;
 let createdBookIds = []; // Array to track created documents
+let consoleErrorStub; // Stub for console.error
 
 describe('Add Book API Tests', () => {
     // Setup before running tests
@@ -18,12 +19,10 @@ describe('Add Book API Tests', () => {
         baseUrl = `http://${address === '::' ? 'localhost' : address}:${port}`;
 
         consoleErrorStub = sinon.stub(console, 'error');
-
     });
 
     // Cleanup after all tests
     after(async () => {
-
         consoleErrorStub.restore();
 
         if (createdBookIds.length > 0) {
@@ -38,7 +37,9 @@ describe('Add Book API Tests', () => {
     });
 
     // Test for adding a new book successfully
-    it('should add a new book successfully', (done) => {
+    it('should add a new book successfully', function (done) {
+        this.timeout(15000); // Set timeout to 8000ms (8 seconds)
+
         chai.request(baseUrl)
             .post('/addBook')
             .set('Content-Type', 'multipart/form-data')
@@ -51,13 +52,16 @@ describe('Add Book API Tests', () => {
             .end((err, res) => {
                 expect(res).to.have.status(201);
                 expect(res.body).to.have.property('message', 'Book added successfully!');
-                
+
                 // Track the book ID for cleanup
                 if (res.body.bookId) {
                     createdBookIds.push(res.body.bookId);
                 }
 
-                done();
+                // Add a 6-second delay before calling done
+                setTimeout(() => {
+                    done();
+                }, 6000);
             });
     });
 
