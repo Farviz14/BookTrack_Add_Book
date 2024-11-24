@@ -1,6 +1,7 @@
 const { describe, it, before, after } = require('mocha');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const sinon = require('sinon'); // Import Sinon for stubbing
 const { app, server } = require('../index'); // Import the app and server
 const Book = require('../models/book.js'); // Import the Book model
 const expect = chai.expect;
@@ -15,10 +16,16 @@ describe('Add Book API Tests', () => {
     before(async () => {
         const { address, port } = server.address();
         baseUrl = `http://${address === '::' ? 'localhost' : address}:${port}`;
+
+        consoleErrorStub = sinon.stub(console, 'error');
+
     });
 
     // Cleanup after all tests
     after(async () => {
+
+        consoleErrorStub.restore();
+
         if (createdBookIds.length > 0) {
             await Book.deleteMany({ _id: { $in: createdBookIds } }); // Remove all tracked test-created documents
         }
@@ -104,6 +111,30 @@ describe('Add Book API Tests', () => {
             .end((err, res) => {
                 expect(res).to.have.status(400);
                 expect(res.body).to.have.property('error', 'isbn_invalid');
+                done();
+            });
+    });
+
+    // Test for simulating an error during the book save operation
+    it('should return a 500 error when saving a book fails', (done) => {
+        // Stub the save function to throw an error
+        const saveStub = sinon.stub(Book.prototype, 'save').throws(new Error('Database save failed'));
+
+        chai.request(baseUrl)
+            .post('/addBook')
+            .set('Content-Type', 'multipart/form-data')
+            .attach('image', Buffer.from('fake-image-content'), 'test-image.jpg') // Mock image upload
+            .field('title', 'Error Test Book')
+            .field('author', 'Jane Doe')
+            .field('isbn', '9876543210123')
+            .field('genre', 'Science Fiction')
+            .field('availableCopies', 5)
+            .end((err, res) => {
+                expect(res).to.have.status(500);
+                expect(res.body).to.have.property('error', 'An error occurred while adding the book.');
+
+                // Restore the original save function
+                saveStub.restore();
                 done();
             });
     });
