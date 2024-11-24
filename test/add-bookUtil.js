@@ -38,7 +38,7 @@ describe('Add Book API Tests', () => {
 
     // Test for adding a new book successfully
     it('should add a new book successfully', function (done) {
-        this.timeout(15000); // Set timeout to 8000ms (8 seconds)
+        this.timeout(15000); // Set timeout to 15000ms (15 seconds)
 
         chai.request(baseUrl)
             .post('/addBook')
@@ -58,10 +58,7 @@ describe('Add Book API Tests', () => {
                     createdBookIds.push(res.body.bookId);
                 }
 
-                // Add a 6-second delay before calling done
-                setTimeout(() => {
-                    done();
-                }, 6000);
+                done();
             });
     });
 
