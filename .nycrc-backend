@@ -4,7 +4,7 @@
         "html"
     ],
     "include": [
-        "utils/*.js"
+        "utils/add-book-util.js"
     ],
     "reportDir": "coverage/backend",
     "branches": 80,

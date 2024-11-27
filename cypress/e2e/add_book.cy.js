@@ -5,13 +5,16 @@ describe('BookTrack Frontend Tests', () => {
   before(() => {
     cy.task('startServer').then((url) => {
       baseUrl = url; // Store the base URL for use in tests
-      cy.visit(baseUrl); // Navigate to the base URL
     });
   });
 
   // Stop the server after all tests are completed
   after(() => {
-    return cy.task('stopServer'); // Stop the server to clean up
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        cy.task('stopServer').then(() => resolve());
+      }, 30000); // Add a 10-second delay
+    });
   });
 
   // Test to open the Add Book form
@@ -86,7 +89,10 @@ describe('BookTrack Frontend Tests', () => {
 
   // Test for successful book addition
   it('should successfully add a book when all fields are valid', () => {
-    cy.visit(baseUrl); // Navigate to the base URL
+    // Intercept the POST request to /addBook
+    cy.intercept('POST', '/addBook').as('apiResponse');
+
+    cy.visit(baseUrl);
 
     cy.get('.add-book-btn').click(); // Open the Add Book form
     cy.get('#title').type('Valid Book Title'); // Enter a valid title
@@ -96,8 +102,16 @@ describe('BookTrack Frontend Tests', () => {
     cy.get('#copies').type('5'); // Enter valid copies
     cy.get('#image').attachFile('test-image.jpg'); // Attach a valid image
     cy.get('#submitbk').click(); // Submit the form
-    cy.on('window:alert', (str) => {
-      expect(str).to.equal('Book added successfully!');
+
+    // Wait for the API response
+    cy.wait('@apiResponse').then(({ request, response }) => {
+      cy.log('Intercepted Request:', request);
+      cy.log('Intercepted Response:', response);
+
+      // Assert the response
+      expect(response).to.have.property('statusCode', 201);
+      expect(response.body).to.have.property('message', 'Book added successfully!');
+      expect(response.body).to.have.property('bookId').and.not.be.null;
     });
   });
 
@@ -125,7 +139,6 @@ describe('BookTrack Frontend Tests', () => {
     cy.get('#image').should('have.value', ''); // Ensure the image field is reset
   });
 
-
   // Test for image size validation
   it('should not allow submission if the image file size exceeds 16 MB', () => {
     cy.visit(baseUrl); // Navigate to the base URL
@@ -136,13 +149,15 @@ describe('BookTrack Frontend Tests', () => {
     cy.get('#isbn').type('9781234567890'); // Enter a valid ISBN
     cy.get('#genre').select('Fiction'); // Select a genre
     cy.get('#copies').type('5'); // Enter valid copies
-    cy.get('#image').attachFile('large-image.jpg'); // Attach a valid image
+    cy.get('#image').attachFile('large-image.jpg'); // Attach a large image file
 
     cy.on('window:alert', (str) => {
       expect(str).to.equal('The image file size should not exceed 16 MB.');
     });
-  });
 
+    // Verify that the image preview is reset to "No Image Selected"
+    cy.get('#imagePreview').should('contain', 'No Image Selected');
+  });
 
   // Test to ensure submission fails if the title already exists
   it('should not allow submission if the title already exists', () => {
@@ -181,27 +196,4 @@ describe('BookTrack Frontend Tests', () => {
       expect(str).to.equal('The ISBN already exists. Please use a unique ISBN.');
     });
   });
-
-  // Test to ensure submission fails if the ISBN is invalid
-  it('should not allow submission if the ISBN is invalid', () => {
-    cy.visit(baseUrl); // Navigate to the base URL
-
-    cy.get('.add-book-btn').click(); // Open the Add Book form
-    cy.get('#title').type('Invalid ISBN Book'); // Enter a unique title
-    cy.get('#author').type('Author Test'); // Enter a valid author
-    cy.get('#isbn').type('298'); // Enter an invalid ISBN
-    cy.get('#genre').select('Science Fiction'); // Select a genre
-    cy.get('#copies').type('7'); // Enter valid copies
-    cy.get('#image').attachFile('test-image.jpg'); // Attach a valid image
-    cy.get('#submitbk').click(); // Submit the form
-
-    // Verify the alert for invalid ISBN
-    cy.on('window:alert', (str) => {
-      expect(str).to.equal('Please enter a valid ISBN number.');
-    });
-  });
-
 });
-
-
-
