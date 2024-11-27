@@ -86,9 +86,9 @@ describe('Add Book API Tests', () => {
             .post('/addBook')
             .set('Content-Type', 'multipart/form-data')
             .attach('image', Buffer.from('fake-image-content'), 'test-image.jpg') // Mock image upload
-            .field('title', 'test2')
+            .field('title', 'DubISBN')
             .field('author', 'Alice Doe')
-            .field('isbn', '9781234567892') // Same ISBN as in the first test
+            .field('isbn', '9780807286005') // Same ISBN as in the first test
             .field('genre', 'Biography')
             .field('availableCopies', 3)
             .end((err, res) => {
