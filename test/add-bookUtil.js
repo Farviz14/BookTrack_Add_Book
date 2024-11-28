@@ -46,7 +46,7 @@ describe('Add Book API Tests', () => {
             .attach('image', Buffer.from('fake-image-content'), 'test-image.jpg') // Mock image upload
             .field('title', 'Testbook')
             .field('author', 'John Doe')
-            .field('isbn', '1234567890098')
+            .field('isbn', '9784567890098')
             .field('genre', 'Fiction')
             .field('availableCopies', 10)
             .end((err, res) => {
@@ -68,7 +68,7 @@ describe('Add Book API Tests', () => {
             .post('/addBook')
             .set('Content-Type', 'multipart/form-data')
             .attach('image', Buffer.from('fake-image-content'), 'test-image.jpg') // Mock image upload
-            .field('title', 'The Great Gatsby') // Same title as before
+            .field('title', 'To Kill A Mocking Bird') // Same title as before
             .field('author', 'Jane Doe')
             .field('isbn', '9876547210123')
             .field('genre', 'Non-Fiction')
@@ -88,7 +88,7 @@ describe('Add Book API Tests', () => {
             .attach('image', Buffer.from('fake-image-content'), 'test-image.jpg') // Mock image upload
             .field('title', 'DubISBN')
             .field('author', 'Alice Doe')
-            .field('isbn', '9780807286005') // Same ISBN as in the first test
+            .field('isbn', '9780316769488') // Same ISBN as in the first test
             .field('genre', 'Biography')
             .field('availableCopies', 3)
             .end((err, res) => {
