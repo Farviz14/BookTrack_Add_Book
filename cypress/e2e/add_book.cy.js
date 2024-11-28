@@ -1,3 +1,5 @@
+const sinon = require('sinon');
+
 describe('BookTrack Add-Book Frontend Tests', () => {
   let baseUrl;
 
@@ -117,9 +119,13 @@ describe('BookTrack Add-Book Frontend Tests', () => {
   });
   
 
-  // Test for successful book addition
   it('should successfully add a book when all fields are valid', () => {
-    cy.visit(baseUrl);
+    cy.intercept('POST', '/addBook', {
+      statusCode: 201,
+      body: { message: 'Book added successfully!' },
+    }).as('addBookRequest');
+  
+    cy.visit(baseUrl); // Navigate to the base URL
   
     // Open the Add Book form and fill in valid details
     cy.get('.add-book-btn').click();
@@ -130,6 +136,9 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.get('#copies').type('5');
     cy.get('#image').attachFile('test-image.jpg');
     cy.get('#submitbk').click();
+  
+    // Wait for the intercepted request to ensure it was triggered
+    cy.wait('@addBookRequest');
   
     // Check for the success alert
     cy.on('window:alert', (str) => {
@@ -150,6 +159,7 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.get('#copies').should('have.value', ''); // Copies should be empty
     cy.get('#image').should('have.value', ''); // Image should be empty
   });
+  
   
 
   it('should display "No Image Selected" in the image preview when no image is uploaded', () => {
