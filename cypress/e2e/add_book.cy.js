@@ -162,15 +162,27 @@ describe('BookTrack Add-Book Frontend Tests', () => {
   
   
 
-  it('should display "No Image Selected" in the image preview when no image is uploaded', () => {
+  // Test case to simulate not selecting an image and validate "No Image Selected" message
+  it('should display "No Image Selected" if no image is uploaded or cleared', () => {
     cy.visit(baseUrl); // Navigate to the base URL
-  
-    // Open the Add Book form by clicking the "Add Book" button
+
+    // Open the Add Book form
     cy.get('.add-book-btn').click();
-  
-    // Verify that the "No Image Selected" message is present in the image preview container
+
+    // Trigger the file input without selecting a file to ensure "No Image Selected" is set
+    cy.get('#image').trigger('change', { force: true });
+
+    // Assert that the "No Image Selected" message is displayed
+    cy.get('#imagePreview').should('contain.text', 'No Image Selected');
+
+    // Now, attach an image and then clear it to simulate deselection
+    cy.get('#image').attachFile('test-image.jpg'); // Attach a valid image
+    cy.get('#image').invoke('val', '').trigger('change'); // Clear the file input
+
+    // Assert again that the "No Image Selected" message is displayed
     cy.get('#imagePreview').should('contain.text', 'No Image Selected');
   });
+
   
 
   // Test for image size validation
@@ -188,6 +200,9 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.on('window:alert', (str) => {
       expect(str).to.equal('The image file size should not exceed 16 MB.');
     });
+
+    cy.get('#imagePreview').should('contain.text', 'No Image Selected');
+
 
   });
 
@@ -219,43 +234,56 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.get('#genre').should('have.value', null); // Genre should be reset to default
     cy.get('#copies').should('have.value', ''); // Copies should be empty
     cy.get('#image').should('have.value', ''); // Image should be empty
-});
+  });
 
-  // Test to ensure submission fails if the title already exists
   it('should not allow submission if the title already exists', () => {
+    cy.intercept('POST', '/addBook', {
+      statusCode: 400,
+      body: { error: 'title_exists' }
+    }).as('addBookRequest');
+  
     cy.visit(baseUrl);
-
+  
     cy.get('.add-book-btn').click();
-    cy.get('#title').type('The Alchemist'); // Duplicate title
+    cy.get('#title').type('The Alchemist');
     cy.get('#author').type('F. Scott Fitzgerald');
     cy.get('#isbn').type('9780807286005');
     cy.get('#genre').select('Fiction');
     cy.get('#copies').type('5');
     cy.get('#image').attachFile('test-image.jpg');
     cy.get('#submitbk').click();
-
+  
+    cy.wait('@addBookRequest');
+  
     cy.on('window:alert', (str) => {
       expect(str).to.equal('The title already exists. Please use a unique title.');
     });
   });
-
-  // Test to ensure submission fails if the ISBN already exists
+  
   it('should not allow submission if the ISBN already exists', () => {
+    cy.intercept('POST', '/addBook', {
+      statusCode: 400,
+      body: { error: 'isbn_exists' }
+    }).as('addBookRequest');
+  
     cy.visit(baseUrl);
-
+  
     cy.get('.add-book-btn').click();
     cy.get('#title').type('Unique Title');
     cy.get('#author').type('Author Name');
-    cy.get('#isbn').type('9780316769488'); // Duplicate ISBN
+    cy.get('#isbn').type('9780316769488');
     cy.get('#genre').select('Mystery');
     cy.get('#copies').type('3');
     cy.get('#image').attachFile('test-image.jpg');
     cy.get('#submitbk').click();
-
+  
+    cy.wait('@addBookRequest');
+  
     cy.on('window:alert', (str) => {
       expect(str).to.equal('The ISBN already exists. Please use a unique ISBN.');
     });
   });
+  
 
   it('should handle the invalid ISBN error from the backend', () => {
     cy.visit(baseUrl); // Navigate to the base URL
@@ -298,8 +326,8 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.intercept('POST', '/addBook', {
       statusCode: 400, // Simulate a backend failure response
       body: {
-        error: 'unknown_error'
-      }
+        error: 'unknown_error',
+      },
     }).as('failedAddBook');
 
     // Visit the page and fill in the form
@@ -313,18 +341,19 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.get('#image').attachFile('test-image.jpg');
     cy.get('#submitbk').click();
 
+    // Wait for the intercepted request to complete
+    cy.wait('@failedAddBook');
+
     // Verify the alert is triggered with 'Failed to add book'
     cy.on('window:alert', (str) => {
       expect(str).to.equal('Failed to add book.');
     });
   });
 
-  // Test case for simulating error during fetch (Network or server error)
+
   it('should display "An error occurred while adding the book" alert on network error', () => {
-    // Stub the backend response to simulate a network error
-    cy.intercept('POST', '/addBook', {
-      forceNetworkError: true // Simulate a network failure
-    }).as('networkErrorAddBook');
+    // Stub the backend response to simulate a network error using Sinon
+    const saveStub = sinon.stub(window, 'fetch').rejects(new Error('Network error occurred'));
 
     // Visit the page and fill in the form
     cy.visit(baseUrl);
@@ -341,6 +370,9 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.on('window:alert', (str) => {
       expect(str).to.equal('An error occurred while adding the book.');
     });
+
+    // Restore the fetch function to avoid impacting other tests
+    saveStub.restore();
   });
   
 });
