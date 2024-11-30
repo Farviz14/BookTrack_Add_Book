@@ -352,9 +352,11 @@ describe('BookTrack Add-Book Frontend Tests', () => {
 
 
   it('should display "An error occurred while adding the book" alert on network error', () => {
-    // Stub the backend response to simulate a network error using Sinon
-    const saveStub = sinon.stub(window, 'fetch').rejects(new Error('Network error occurred'));
-
+    // Intercept the backend response to simulate a network error
+    cy.intercept('POST', '/addBook', {
+      forceNetworkError: true // Simulates a network error
+    }).as('networkError');
+  
     // Visit the page and fill in the form
     cy.visit(baseUrl);
     cy.get('.add-book-btn').click();
@@ -365,14 +367,15 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     cy.get('#copies').type('5');
     cy.get('#image').attachFile('test-image.jpg');
     cy.get('#submitbk').click();
-
+  
+    // Wait for the intercepted request to complete
+    cy.wait('@networkError');
+  
     // Verify the alert is triggered with 'An error occurred while adding the book'
     cy.on('window:alert', (str) => {
       expect(str).to.equal('An error occurred while adding the book.');
     });
-
-    // Restore the fetch function to avoid impacting other tests
-    saveStub.restore();
   });
+  
   
 });
