@@ -6,7 +6,7 @@ function closeForm() {
 
 // Function to check if a title already exists, ignoring the current book
 async function isTitleUnique(newTitle, bookId) {
-    const response = await fetch(`http://localhost:5500/books`);
+    const response = await fetch(`/books`);
     const books = await response.json();
 
     return books.every(book => book.title !== newTitle || book._id === bookId);
