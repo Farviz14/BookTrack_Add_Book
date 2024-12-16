@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile 
-    image: Farviz14/rms-docker-img:latest
+    image: Farviz14/rms-docker-img:v1
     container_name: rms-docker-container
     ports:
       - "8000:5500" 
