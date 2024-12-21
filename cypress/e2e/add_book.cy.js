@@ -302,7 +302,7 @@ describe('BookTrack Add-Book Frontend Tests', () => {
     // Use cy.intercept() to intercept the POST request to /addBook
     cy.intercept('POST', 'http://localhost:5500/addBook', {
       statusCode: 400, // Indicates a Bad Request
-      body: {
+      body: {git
         error: 'isbn_invalid', // Response body indicating invalid ISBN error
       },
     }).as('addBookRequest');
