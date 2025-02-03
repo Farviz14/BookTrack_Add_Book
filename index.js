@@ -34,6 +34,9 @@ app.use(bodyParser.json());
 // Serve static files from the 'public' directory (e.g., HTML, CSS, JS)
 app.use(express.static('./public'));
 
+const statusMonitor = require('express-status-monitor');
+app.use(statusMonitor());
+
 // Connect to MongoDB using the MONGODB_URI environment variable from .env file
 mongoose.connect(
     process.env.MONGODB_URI,

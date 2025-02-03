@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile 
-    image: farviz14/bkt-docker-img:v11
+    image: farviz14/bkt-docker-img:v12
     container_name: bkt-docker-container
     ports:
       - "8000:5500" 
