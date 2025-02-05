@@ -23,6 +23,8 @@ const Book = require('./models/book.js'); // Import your Book model
 const app = express();
 const PORT = process.env.PORT || 5500; // Set the server port from environment variables or default to 5500
 const startPage = 'index.html';        // Define the main entry HTML file
+const promClient = require('prom-client');
+
 
 // Enable Cross-Origin Resource Sharing (CORS) for all routes
 app.use(cors());
@@ -60,6 +62,15 @@ app.post('/addTransaction', addTransaction);
 // Define a route to serve the main HTML page at the root URL
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/' + startPage); // Send the 'index.html' file as a response
+});
+
+// Collect default metrics for system stats (CPU, memory, etc.)
+promClient.collectDefaultMetrics();
+
+// Define the /metrics route for Prometheus to scrape
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', promClient.register.contentType); // Set response type
+  res.end(await promClient.register.metrics()); // Send metrics data
 });
 
 // Start the server on the defined PORT
