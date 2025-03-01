@@ -37,7 +37,7 @@ app.use(bodyParser.json());
 app.use(express.static('./public'));
 
 const statusMonitor = require('express-status-monitor');
-app.use(statusMonitor());
+app.use(statusMonitor()); 
 
 // Connect to MongoDB using the MONGODB_URI environment variable from .env file
 mongoose.connect(
